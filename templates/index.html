@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OpenAI API Key Checker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <h1>🔐 OpenAI API Key Checker</h1>
+  <textarea id="apikeys" placeholder="Paste API keys (one per line)"></textarea><br>
+  <button id="checkBtn">Check Validity</button>
+  <div id="results"></div>
+  <script>
+    document.getElementById('checkBtn').onclick = async () => {
+      const lines = document.getElementById('apikeys').value.trim().split('\n');
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+      for (let key of lines) {
+        key = key.trim();
+        if (!key) continue;
+        const resp = await fetch('/check_key', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({key})
+        });
+        const data = await resp.json();
+        const p = document.createElement('p');
+        if (data.valid) {
+          p.textContent = `✅ VALID: ${key}`;
+          p.className = 'valid';
+        } else {
+         p.textContent = `❌ INVALID/EXPIRED: ${key}${data.status ? ` (HTTP ${data.status})` : data.error ? ` (${data.error})` : ''}`;
+
+          p.className = 'invalid';
+        }
+        resultsDiv.appendChild(p);
+      }
+    };
+  </script>
+</body>
+</html>
